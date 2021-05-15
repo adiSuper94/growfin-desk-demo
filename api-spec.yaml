@@ -1,0 +1,373 @@
+openapi: 3.1.0
+info:
+  title: desk
+  version: '1.0'
+  description: Open API spec for growfin desk demo
+  contact:
+    name: Aditya Subramanian
+    email: aditarun2008@gmail.com
+servers:
+  - url: 'http://localhost:8080/v1'
+paths:
+  '/tickets/{ticketId}':
+    parameters:
+      - schema:
+          type: string
+        name: ticketId
+        in: path
+        required: true
+        description: Unique ticket identifier
+    get:
+      summary: Get Ticket Info by Ticket ID
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseTicket'
+                  - $ref: '#/components/schemas/AdditionalTicketProperties'
+        '404':
+          description: Ticket Not Found
+      operationId: get-ticket-ticketId
+      description: Retrieve the information of the ticket with the matching ticket ID.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+    patch:
+      summary: Update Ticket Information
+      operationId: patch-users-userId
+      responses:
+        '200':
+          description: User Updated
+          content:
+            application/json:
+              schema: {}
+              examples: {}
+            application/xml:
+              schema:
+                type: object
+                properties: {}
+              examples: {}
+        '404':
+          description: User Not Found
+      description: Update the information of an existing ticket with matching ticketId.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                priority:
+                  type: string
+                  enum:
+                    - p0
+                    - p1
+                    - p2
+                assignee:
+                  type: string
+                  format: uuid
+            examples:
+              Update First Name:
+                value:
+                  firstName: Rebecca
+              Update Email:
+                value:
+                  email: rebecca@gmail.com
+              Update Last Name & Date of Birth:
+                value:
+                  lastName: Baker
+                  dateOfBirth: '1985-10-02'
+        description: Patch user properties to update.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+    delete:
+      summary: Delete Ticket by ID
+      operationId: delete-tickets-ticketId
+      responses:
+        '202':
+          description: Accepted
+      description: Delete an existing ticket with matching ticketId.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+  /users:
+    post:
+      summary: Create New User
+      operationId: post-user
+      responses:
+        '201':
+          description: User Created
+        '400':
+          description: Missing Required Information
+        '409':
+          description: Email Already Taken
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BaseUser'
+                - $ref: '#/components/schemas/UserRequiredProperties'
+            examples: {}
+        description: API to POST the necessary fields to create a new user.
+      description: Create a new user.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+    parameters: []
+    get:
+      summary: List all Users/Agents
+      operationId: get-users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/BaseUser'
+                    - $ref: '#/components/schemas/AdditionalUserProperties'
+        '404':
+          description: Not Found
+      description: List all Users/Agents
+  '/customers/{customerId}':
+    parameters:
+      - name: customerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get Customer Details by Customer ID
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseCustomer'
+                  - $ref: '#/components/schemas/AdditionalCustomerProperties'
+        '404':
+          description: Not Found
+      operationId: get-customer-customerId
+      description: Retrieve the information of the cusstomer with the matching ticket ID.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+  /customers:
+    post:
+      summary: Create new Customer
+      operationId: post-customer
+      responses:
+        '200':
+          description: OK
+      description: API to POST the necessary fields to create a new customer.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BaseCustomer'
+                - $ref: '#/components/schemas/CustomerRequireProperties'
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+    parameters: []
+    get:
+      summary: List all Customers
+      operationId: get-customers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/BaseCustomer'
+                    - $ref: '#/components/schemas/AdditionalCustomerProperties'
+        '404':
+          description: Not Found
+      description: List all customersList all customers
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+  /tickets:
+    get:
+      summary: List all tickets
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/BaseTicket'
+                    - $ref: '#/components/schemas/AdditionalTicketProperties'
+        '404':
+          description: Not Found
+      operationId: get-tickets
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+      description: Get list of all ticket acording to filter criteria.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaseTicket'
+    post:
+      summary: ''
+      operationId: post-tickets
+      responses:
+        '200':
+          description: OK
+        '409':
+          description: Conflict
+      description: API to POST the necessary fields to create a new ticket.
+      parameters:
+        - $ref: '#/components/parameters/X-TENNANT-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BaseTicket'
+                - $ref: '#/components/schemas/TicketRequiredProperties'
+components:
+  schemas:
+    BaseTicket:
+      title: BaseTicket
+      type: object
+      description: Base Ticket schema used for PUT
+      examples: []
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        type:
+          type: string
+    BaseUser:
+      title: BaseUser
+      type: object
+      description: Base Desk agent schema used for PUT
+      properties:
+        name:
+          type: string
+        emailId:
+          type: string
+          format: email
+    BaseCustomer:
+      title: BaseCustomer
+      type: object
+      properties:
+        name:
+          type: string
+        emailId:
+          type: string
+          format: email
+      description: Base Customer Schema used for PUT
+    TicketRequiredProperties:
+      title: TicketRequiredProperties
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    CustomerRequireProperties:
+      title: CustomerRequireProperties
+      type: object
+      properties:
+        emailId:
+          type: string
+          format: email
+        name:
+          type: string
+      required:
+        - emailId
+        - name
+    UserRequiredProperties:
+      title: UserRequiredProperties
+      type: object
+      properties:
+        emailId:
+          type: string
+          format: email
+        name:
+          type: string
+      required:
+        - emailId
+        - name
+    AdditionalTicketProperties:
+      title: AdditionalTicketProperties
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        assignee:
+          allOf:
+            - $ref: '#/components/schemas/BaseUser'
+            - $ref: '#/components/schemas/AdditionalUserProperties'
+        created_by:
+          allOf:
+            - $ref: '#/components/schemas/BaseUser'
+            - $ref: '#/components/schemas/AdditionalUserProperties'
+        customer:
+          allOf:
+            - $ref: '#/components/schemas/BaseCustomer'
+            - $ref: '#/components/schemas/AdditionalCustomerProperties'
+      required:
+        - id
+    AdditionalCustomerProperties:
+      title: AdiitionalTicketProperties
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+      required:
+        - id
+    AdditionalUserProperties:
+      title: AdditionalUserProperties
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+      required:
+        - id
+  parameters:
+    X-TENNANT-ID:
+      name: X-TENNANT-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Organization Identifier
