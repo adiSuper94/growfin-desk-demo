@@ -54,16 +54,17 @@ CREATE TABLE ticket (
   description VARCHAR(1500),
   status ticket_status NOT NULL,
   priority ticket_priority,
-  created_by UUID,
-  assignee UUID,
-  customer UUID,
+  type ticket_type NOT NULL,
+  creator_id UUID,
+  assignee_id UUID,
+  customer_id UUID,
   created_at TIMESTAMP NOT NULL,
   modified_at TIMESTAMP NOT NULL,
   org_id UUID NOT NULL,
   FOREIGN KEY (org_id) REFERENCES org(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES agent(id) ON DELETE CASCADE,
-  FOREIGN KEY (assignee) REFERENCES agent(id) ON DELETE CASCADE,
-  FOREIGN KEY (customer) REFERENCES customer(id) ON DELETE CASCADE
+  FOREIGN KEY (creator_id) REFERENCES agent(id) ON DELETE CASCADE,
+  FOREIGN KEY (assignee_id) REFERENCES agent(id) ON DELETE CASCADE,
+  FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
 );
 
 CREATE TABLE ticket_history (
@@ -104,19 +105,8 @@ CREATE TABLE cx_notification (
 );
 
 -- ticket
-CREATE INDEX IF NOT EXISTS ticket_assignee ON ticket (assignee, org_id);
+CREATE INDEX IF NOT EXISTS ticket_assignee ON ticket (assignee_id);
 
 --ticket_history
-CREATE INDEX IF NOT EXISTS ticket_history_ticket_id ON ticket_history (ticket_id, org_id);
+CREATE INDEX IF NOT EXISTS ticket_history_ticket_id ON ticket_history (ticket_id);
 
---response
-CREATE INDEX IF NOT EXISTS response_org_id ON response (org_id);
-
---cx_notification
-CREATE INDEX IF NOT EXISTS cx_notification_org_id ON cx_notification (org_id);
-
---agent
-CREATE INDEX IF NOT EXISTS agent_org_id ON agent (org_id);
-
---customer
-CREATE INDEX IF NOT EXISTS customer_org_id ON customer (org_id);
