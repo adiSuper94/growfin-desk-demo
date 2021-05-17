@@ -45,6 +45,7 @@
  - Authentication and Authorization.
  - Multi-tenant support
    - Current db schema is for multi-tenant. Code needs to be changed.
+ - Split unrelated components(eg. mailer) into a diff service
    
 ## Techstack used
  - Springboot
