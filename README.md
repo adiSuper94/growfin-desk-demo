@@ -31,13 +31,21 @@
 
  -  Below is a sendgrid account credentials. You can use them or you can sign up for an email service of your choice. 
  -  Note: the sendgrid credentials seems to have expired. I got an error when tried it out on it's dev portal.
+ -  **Approach**: queue a message to notification exchange. And process it asynchronously.
 
 - [x] Assign the ticket equally to available agents on that given day (do not overload a single agent, spread the ticket load equally) 
 
-- [ ] Update tickets that were marked as Resolved status 30 days ago as closed status 
+- [ ] Update tickets that were marked as Resolved status 30 days ago as closed status
+
+ -   **Approach**: Run a cron job everyday to run a batch update.
 
 
-
+## TODOs
+ - TESTS 😬
+ - Authentication and Authorization.
+ - Multi-tenant support
+   - Current db schema is for multi-tenant. Code needs to be changed.
+   
 ## Techstack used
  - Springboot
   - jooq
