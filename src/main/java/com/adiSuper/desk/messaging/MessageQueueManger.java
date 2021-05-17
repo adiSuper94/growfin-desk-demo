@@ -1,0 +1,15 @@
+package com.adiSuper.desk.messaging;
+
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MessageQueueManger {
+  @Autowired
+  private AmqpTemplate amqpTemplate;
+
+  public void queueMessage(String exchange, Object message){
+    amqpTemplate.convertAndSend(exchange, "", message);
+  }
+}

@@ -9,6 +9,7 @@ import com.adiSuper.generated.core.tables.records.TicketHistoryRecord;
 import com.adiSuper.generated.core.tables.records.TicketRecord;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.UpdateConditionStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
+import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.trueCondition;
 
 @Repository
@@ -35,7 +34,7 @@ public class TicketDbAccessor extends BaseDbAccessor<TicketRecord, Ticket, com.a
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   public List<Ticket> fetchAll(Optional<Ticket> optionalTicket) {
-    if(optionalTicket.isPresent()){
+    if (optionalTicket.isPresent()) {
       return this.fetchAndFilter(optionalTicket.get());
     }
     List<Ticket> tickets = fetchWithCondition(trueCondition());
@@ -96,6 +95,46 @@ public class TicketDbAccessor extends BaseDbAccessor<TicketRecord, Ticket, com.a
       }
     });
     return ticketRecord.into(Ticket.class);
+  }
+
+  public Map<UUID, Integer> getTicketsGroupedByAssigneeId() {
+    Map<UUID, Integer> assignedTicketsMap = db.select(Tables.TICKET.ASSIGNEE_ID, count())
+        .from(Tables.TICKET)
+        .where(Tables.TICKET.STATUS.in(TicketStatus.open, TicketStatus.customer_responded))
+        .groupBy(Tables.TICKET.ASSIGNEE_ID)
+        .fetchMap(Tables.TICKET.ASSIGNEE_ID, count());
+    return assignedTicketsMap;
+  }
+
+  public List<UUID> filterOpenTickets(List<UUID> ticketIds) {
+    List<UUID> openTickets =db.select(Tables.TICKET.ID).from(Tables.TICKET)
+        .where(Tables.TICKET.STATUS.eq(TicketStatus.open).and(Tables.TICKET.ID.in(ticketIds)))
+        .fetch(Tables.TICKET.ID);
+    return openTickets;
+  }
+
+  public void batchUpdateAssigneeId(Map<UUID, UUID> ticketVsAssigneeMap){
+    List<UpdateConditionStep<TicketRecord>> updates = new ArrayList<>();
+    for (UUID ticketId : ticketVsAssigneeMap.keySet()) {
+      updates.add(this.getQueryForAssigneeUpdate(ticketId, ticketVsAssigneeMap.get(ticketId)));
+    }
+    db.batch(updates).execute();
+  }
+
+  public void updateAssigneeId(UUID ticketId, UUID agnetId){
+    this.getQueryForAssigneeUpdate(ticketId, agnetId).execute();
+  }
+  private UpdateConditionStep<TicketRecord> getQueryForAssigneeUpdate(UUID ticketId, UUID agentId){
+    return db.update(Tables.TICKET)
+        .set(Tables.TICKET.ASSIGNEE_ID, agentId)
+        .where(Tables.TICKET.ID.eq(ticketId));
+  }
+  public boolean isTicketOpen(UUID ticketId){
+    List<UUID> openTickets = this.filterOpenTickets(Collections.singletonList(ticketId));
+    if(openTickets.size() >= 1){
+      return true;
+    }
+    return false;
   }
 
   private TicketHistoryRecord createTicketHistoryRecord(UUID ticketId, TicketHistoryType type, String oldVal, String newVal, UUID orgID) {

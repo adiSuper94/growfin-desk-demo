@@ -41,10 +41,18 @@ public class AgentDbAccessor  extends BaseDbAccessor<AgentRecord, Agent, com.adi
     return agentId;
   }
 
-  private void setOrgId(Agent cx) {
-    if (cx.getOrgId() == null) {
+  public Agent fetchOne(){
+    List<Agent>agents = db.selectFrom(Tables.AGENT).limit(1).fetch().into(Agent.class);
+    if (agents.isEmpty()) {
+      throw new EntityNotFoundException("No User found :(");
+    }
+    return agents.get(0);
+  }
+
+  private void setOrgId(Agent agent) {
+    if (agent.getOrgId() == null) {
       UUID defaultOrgId = orgDbAccessor.getDefaultOrgId();
-      cx.setOrgId(defaultOrgId);
+      agent.setOrgId(defaultOrgId);
     }
   }
 

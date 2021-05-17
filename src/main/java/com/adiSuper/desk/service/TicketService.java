@@ -3,6 +3,8 @@ package com.adiSuper.desk.service;
 import com.adiSuper.desk.dbAccessor.AgentDbAccessor;
 import com.adiSuper.desk.dbAccessor.CustomerDbAccessor;
 import com.adiSuper.desk.dbAccessor.TicketDbAccessor;
+import com.adiSuper.desk.messaging.Exchanges;
+import com.adiSuper.desk.messaging.MessageQueueManger;
 import com.adiSuper.desk.model.Agent;
 import com.adiSuper.desk.model.Customer;
 import com.adiSuper.desk.model.Ticket;
@@ -13,9 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+
 
 @Service
 public class TicketService {
@@ -34,6 +35,12 @@ public class TicketService {
   @Autowired
   private DSLContext db;
 
+  @Autowired
+  private MessageQueueManger messageQueueManger;
+
+  @Autowired
+  private TicketAssigningPolicy ticketAssigningPolicy;
+
 
   public Ticket getTicketById(UUID id) {
     Ticket ticket = ticketDbAccessor.fetchOne(Tables.TICKET.ID, id);
@@ -51,6 +58,7 @@ public class TicketService {
 
   public UUID addTicket(Ticket ticket) {
     UUID ticketId = ticketDbAccessor.insertOne(ticket);
+    messageQueueManger.queueMessage(Exchanges.OPEN_TICKET, ticketId);
     return ticketId;
   }
 
@@ -62,6 +70,15 @@ public class TicketService {
     return ticketDbAccessor.updateTicketId(ticketId, ticket);
   }
 
+  public void assignTickets(List<UUID> ticketIds){
+    Map<UUID, UUID> ticketVsAgentMap = ticketAssigningPolicy.getAgentsForNextTickets(ticketIds);
+    ticketDbAccessor.batchUpdateAssigneeId(ticketVsAgentMap);
+  }
+
+  public void assignTicket(UUID ticketId){
+    UUID agentId = ticketAssigningPolicy.getNextAgent(ticketId);
+    ticketDbAccessor.updateAssigneeId(ticketId, agentId);
+  }
   private Ticket enrichTicketInfo(Ticket ticket) {
     try {
       if (ticket.getCreatorId() != null) {
